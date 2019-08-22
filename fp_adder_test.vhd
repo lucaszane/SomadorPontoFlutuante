@@ -7,10 +7,10 @@ entity fp_adder_test is
       CLOCK_50: in std_logic;
       SW: in std_logic_vector(7 downto 0);
       KEY: in std_logic_vector(3 downto 0);     
-		HEX0: out std_logic_vector(7 downto 0);
-		HEX1: out std_logic_vector(7 downto 0);
-		HEX2: out std_logic_vector(7 downto 0);
-		HEX3: out std_logic_vector(7 downto 0)
+		HEX0: out std_logic_vector(6 downto 0);
+		HEX1: out std_logic_vector(6 downto 0);
+		HEX2: out std_logic_vector(6 downto 0);
+		HEX3: out std_logic_vector(6 downto 0)
    );
 end fp_adder_test;
 
@@ -27,12 +27,26 @@ architecture arch of fp_adder_test is
       signal sseg: std_logic_vector(7 downto 0); 
 begin
    -- set up the fp adder input signals
-   sign1 <= '0';
-   exp1 <= "1000";
-   frac1<= '1' &  sw(1) & sw(0) & "10101";
-   sign2 <= sw(7);
-   exp2 <= KEY;
-   frac2 <= '1' & sw(6 downto 0);
+	-- sign1 <= '0';
+	-- exp1 <= "0100";
+	-- frac1<= "10001000";
+	-- sign2 <= '0';
+	-- exp2 <= "0010";
+	-- frac2 <= "11100000";
+	
+	-- sign1 <= '0';
+   -- exp1 <= "0100";
+   -- frac1<= "10001000";
+   -- sign2 <= '1';
+   -- exp2 <= "0010";
+   -- frac2 <= "11100000";
+	
+	   sign1 <= '1';
+	   sign2 <= '1';
+	   exp1 <= "0001";
+	   exp2 <= "0001";
+	   frac1 <= "11000000";
+	   frac2 <= "10100000";
 
    -- instantiate fp adder
    fp_add_unit: entity work.fp_adder
@@ -62,10 +76,10 @@ begin
            "11111111";                       -- blank
 			  
 
-	HEX3 <= led3;
-	HEX1 <= led1;
-	HEX2 <= led2;
-	HEX0 <= led0;
+	-- HEX3 <= led3 (6 downto 0);
+	-- HEX1 <= led1 (6 downto 0);
+	-- HEX2 <= led2 (6 downto 0);
+	-- HEX0 <= led0 (6 downto 0);
 
    -- instantiate 7-seg LED display time-multiplexing module
    disp_unit: entity work.disp_mux
@@ -74,4 +88,30 @@ begin
          in0=>led0, in1=>led1, in2=>led2, in3=>led3,
          an=>an, sseg=>sseg
       );
+		
+		process(an, sseg)
+   begin
+      case an is
+         when "1110" =>
+				HEX0 <= sseg (6 downto 0);
+				HEX1 <= "1111111";
+				HEX2 <= "1111111";
+				HEX3 <= "1111111";
+         when "1101" =>
+				HEX1 <= sseg (6 downto 0);
+				HEX0 <= "1111111";
+				HEX2 <= "1111111";
+				HEX3 <= "1111111";
+         when "1011" =>
+				HEX2 <= sseg (6 downto 0);
+				HEX1 <= "1111111";
+				HEX0 <= "1111111";
+				HEX3 <= "1111111";
+         when others =>
+				HEX3 <= sseg (6 downto 0);
+				HEX1 <= "1111111";
+				HEX2 <= "1111111";
+				HEX0 <= "1111111";
+      end case;
+   end process;
 end arch;
