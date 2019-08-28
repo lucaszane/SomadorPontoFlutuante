@@ -2,15 +2,18 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
+
 entity fp_adder_test is
    port(
       CLOCK_50: in std_logic;
-      SW: in std_logic_vector(7 downto 0);
+      SW: in std_logic_vector(8 downto 0);
       KEY: in std_logic_vector(3 downto 0);     
 		HEX0: out std_logic_vector(6 downto 0);
 		HEX1: out std_logic_vector(6 downto 0);
 		HEX2: out std_logic_vector(6 downto 0);
-		HEX3: out std_logic_vector(6 downto 0)
+		HEX3: out std_logic_vector(6 downto 0);
+		LEDG: out std_logic_vector(3 downto 0)
    );
 end fp_adder_test;
 
@@ -25,6 +28,7 @@ architecture arch of fp_adder_test is
              std_logic_vector(7 downto 0);
       signal an: std_logic_vector(3 downto 0);
       signal sseg: std_logic_vector(7 downto 0); 
+		signal state: std_logic_vector(1 downto 0); 
 begin
    -- set up the fp adder input signals
 	-- sign1 <= '0';
@@ -41,13 +45,61 @@ begin
    -- exp2 <= "0010";
    -- frac2 <= "11100000";
 	
-	   sign1 <= '1';
-	   sign2 <= '1';
-	   exp1 <= "0001";
-	   exp2 <= "0001";
-	   frac1 <= "11000000";
-	   frac2 <= "10100000";
+	   -- sign1 <= '1'; -- sinal negativo
+	   -- sign2 <= '1'; -- sinal negativo
+	   -- exp1 <= "0001";  -- expoente 1
+	   -- exp2 <= "0001"; -- expoente 1
+	   -- frac1 <= "11000000"; -- já com expoente, 1,5
+	   -- frac2 <= "10100000"; -- já com expoente, 1,25
+		-- resultado é -2,75
+		
+		-- sign1 <= '0';
+	   -- sign2 <= '0';
+	   -- exp1 <= "0000";
+	   -- exp2 <= "0000";
+	   -- frac1 <= "00000000";
+	   -- frac2 <= "00000000";
 
+		
+		process (KEY)
+			begin
+				if (KEY(0)='0') then						
+					state <= "00";
+					
+				elsif (KEY(1)='0') then
+					state <= "01";
+				elsif (KEY(2)='0') then
+					state <= "10";
+				elsif (KEY(3)='0') then
+					state <= "11";
+				end if;
+			end process;
+	
+			
+		process (state, SW)
+			begin
+				case state is
+					when "00" => 
+						LEDG<="0001";
+						sign1 <= SW(8);
+						frac1 <= SW(7 downto 0);					
+						
+					when "01" =>
+						LEDG<="0010";
+						exp1 <= SW(3 downto 0);
+						
+					when "10" => 
+						LEDG<="0100";
+						sign2 <= SW(8);
+						frac2 <= SW(7 downto 0);
+						
+					when others => 
+						LEDG<="1000";
+						exp2 <= SW(3 downto 0);
+					
+					end case;
+			end process;
+	
    -- instantiate fp adder
    fp_add_unit: entity work.fp_adder
       port map(
@@ -75,11 +127,6 @@ begin
    led3 <= "10111111" when sign_out='1' else -- middle bar
            "11111111";                       -- blank
 			  
-
-	-- HEX3 <= led3 (6 downto 0);
-	-- HEX1 <= led1 (6 downto 0);
-	-- HEX2 <= led2 (6 downto 0);
-	-- HEX0 <= led0 (6 downto 0);
 
    -- instantiate 7-seg LED display time-multiplexing module
    disp_unit: entity work.disp_mux
